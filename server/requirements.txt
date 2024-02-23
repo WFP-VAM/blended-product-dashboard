@@ -1,0 +1,10 @@
+rio-tiler
+fastapi
+uvicorn
+xarray
+rioxarray
+zarr
+fsspec
+requests
+aiohttp
+shapely
