@@ -18,4 +18,4 @@ services:
     volumes: 
     - ./frontend:/app
     ports:
-    - 3002:3000
+    - 3000:3000

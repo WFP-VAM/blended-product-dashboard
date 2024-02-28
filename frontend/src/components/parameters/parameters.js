@@ -1,4 +1,5 @@
 import Calendar from '../calendar/calendar'
+import RangeSlider from '../rangeslider/rangeslider'
 import { useContext } from 'react'
 import { AppContext } from '../../contexts/context'
 
@@ -14,18 +15,15 @@ export default function Parameters() {
     }
 
     return <div className="parameters">
-        <label for="streak">Streak:</label>
-        <input type="number" id="streak" name="streak" required minlength="4" maxlength="8" size="10" onChange={(e) => updateParams(e)} />
-        <br></br>
         <label for="threshold">Threshold:</label>
-        <input type="number" id="threshold" name="threshold" required minlength="4" maxlength="8" size="10" onChange={(e) => updateParams(e)} />
+        <input defaultValue={300} type="number" id="threshold" name="threshold" required minlength="4" maxlength="8" size="10" onChange={(e) => updateParams(e)} />
         <br></br>
-        <label for="op">Operator:</label>
+        {/* <label for="op">Operator:</label>
         <select id="op" name="op" onChange={(e) => updateParams(e)} >
             <option value="<">{'<'}</option>
             <option value=">">{'>'}</option>
         </select>
-        <br></br>
-        <Calendar />
+        <br></br> */}
+        <RangeSlider />
     </div>
 }

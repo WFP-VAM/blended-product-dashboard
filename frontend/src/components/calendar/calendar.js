@@ -9,7 +9,7 @@ export default function MyCalender() {
     const { selectedDates, setSelectedDates } = useContext(AppContext)
 
     return (
-        <Collapsible trigger="Select Date Range" classParentString='calender'>
+        <Collapsible trigger="Select Date Range" classParentString='calendar'>
             <DateRangePicker
                 ranges={[selectedDates]}
                 onChange={(d) => setSelectedDates(d.selection)}
