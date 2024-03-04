@@ -13,14 +13,16 @@ import {
 import { useContext } from "react";
 import { AppContext } from '../../contexts/context';
 import Description from "./description";
-import { mean, min, max, sum, median, joinArraysByKey, linearInterpolation } from "../../calc/metrics";
+import { mean, min, max, sum, median, joinArraysByKey, countLongestConsecutiveWithCriteria } from "../../calc/metrics";
 
 export default function Chart() {
     const {
         params, timeseriesData, months, years
     } = useContext(AppContext)
 
-    if (timeseriesData.length === 0) return
+    if (timeseriesData.length === 0) return <div className="stats-panel empty">
+            Select a feature to view seasonal blended rainfall statistics
+        </div>
     function formatTimeseriesData(data) {
         return data.data.map((x, idx) => {
             return {
@@ -34,6 +36,12 @@ export default function Chart() {
         start: `${years.start}-01-01`,
         end: `${years.end + 1}-01-01`,
     }
+
+    // const formattedDates = {
+    //     start: `${months.start - months_buffer <= 0 ? years.start-1 : years.start}-${((months.start - months_buffer <=0 ? months.start - months_buffer + 12 : months.start - months_buffer)).toString().padStart(2, '0')}-01`,
+    //     end: `${months.end + months_buffer > 12 ? years.end+1 : years.end}-${((months.end + months_buffer)%12).toString().padStart(2, '0')}-01`,
+    // }
+    // console.log(formattedDates)
 
     const years_arr = Array(years.end + 1 - years.start).fill(0).map((_, i) => i + years.start)
 
@@ -66,13 +74,15 @@ export default function Chart() {
     })
 
     console.log(splitTS)
+    console.log(params)
     const seasonal_stats = splitTS.map(data => {
         return {
             mean: mean(data, 'v'),
             min: min(data, 'v'),
             max: max(data, 'v'),
             sum: sum(data, 'v'),
-            label: median(data, 'k')
+            label: median(data, 'k'),
+            streak: countLongestConsecutiveWithCriteria(data, d => d.v, params.wetdry_threshold, params.gtlt)
         }
     })
 
@@ -83,23 +93,48 @@ export default function Chart() {
         mean: mean(seasonal_stats, 'sum'),
         min: min(seasonal_stats, 'sum'),
         max: max(seasonal_stats, 'sum'),
-        sum: sum(seasonal_stats, 'sum')
+        sum: sum(seasonal_stats, 'sum'),
     }
     console.log(overall_stats)
+    function getSeasonByYear(y) {
+        return {
+            stats: seasonal_stats.filter(d => parseInt(d.label.split('-')[0]) === y)[0],
+            daily: splitTS.filter(d => d[0].in_range === y)[0]
+        }
+    }
+
     const years_gt_param = years_arr.filter(
         y => {
-            const season = seasonal_stats.filter(d => parseInt(d.label.split('-')[0]) === y)
-            return season[0].sum > params.threshold
+            const season = getSeasonByYear(y).stats
+            switch (params.op) {
+                case "sum":
+                    return season.sum > params.threshold
+                case "mean":
+                    return season.mean > params.threshold
+                case "max":
+                    return season.max > params.threshold
+                case "streak":
+                    return season.streak > params.threshold
+                    // switch (params.gtlt) {
+                    //     case ">":
+                    //         return season.streak > params.threshold
+                    //     case "<":
+                    //         return season.streak < params.threshold
+                    // }
+                default:
+                    return 0
+            }
         }
     )
     console.log(years_gt_param)
     // const seasonal_interpolated = linearInterpolation(data, 'mean')
     // console.log(seasonal_interpolated)
 
+
     return (
         <div className="stats-panel">
             <Description data={filteredData} />
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={180}>
                 <LineChart
                     width={500}
                     height={110}
@@ -110,29 +145,71 @@ export default function Chart() {
                         bottom: 10,
                     }}
                     data={data}
-                // data={data.filter( d => "sum" in d)}
                 >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="k" dy={5}
                         xAxisId={"x"}
+                        hide={true}
+                        ticks={data.map(d => d.label)}
                     />
-                    <YAxis dataKey="sum"
-                        yAxisId={"sum"}
+                    <YAxis dataKey={params.op}
+                        yAxisId={"agg"}
+                        domain={['auto', 'auto']}
                     />
-                    <Legend align="right" height={10} />
                     <Tooltip cursor={{ strokeDasharray: '3 3' }} />
                     {
                         years_arr.map(y => <ReferenceArea
                             x1={`${y}-${months.start.toString().padStart(2, '0')}-01`}
                             x2={`${y}-${months.end.toString().padStart(2, '0')}-01`}
                             strokeOpacity={0.3}
-                            onMouseEnter={(e) => console.log(e)}
-                            yAxisId={"sum"}
+                            onMouseEnter={(e) => {
+                                const season = getSeasonByYear(y)
+                                console.log(season)
+                            }}
+                            yAxisId={"agg"}
                             xAxisId={"x"}
                             fill={years_gt_param.includes(y) ? "cyan" : "gray"}
                             opacity={0.5}
                         />)
                     }
+                    <Line
+                        type="linear"
+                        dataKey={params.op}
+                        connectNulls
+                        xAxisId={"x"}
+                        yAxisId={"agg"}
+                        fillOpacity={1}
+                        dot={false}
+                    />
+                    <ReferenceLine
+                        xAxisId={"x"}
+                        yAxisId={"agg"}
+                        stroke="orange"
+                        y={params.threshold} />
+                </LineChart>
+            </ResponsiveContainer>
+            <ResponsiveContainer width="100%" height={150}>
+                <LineChart
+                    width={500}
+                    height={110}
+                    margin={{
+                        top: 15,
+                        right: 30,
+                        left: 5,
+                        bottom: 10,
+                    }}
+                    data={data}
+                >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="k" dy={5}
+                        xAxisId={"x"}
+                        ticks={data.map(d => d.label)}
+                    />
+                    <YAxis dataKey="v"
+                        yAxisId={"sum"}
+                    />
+                    <Legend align="right" height={10} />
+                    <Tooltip cursor={{ strokeDasharray: '3 3' }} />
                     <Line
                         type="monotone"
                         dataKey="v"
@@ -141,34 +218,7 @@ export default function Chart() {
                         fillOpacity={1}
                         stroke="#C76F85"
                         dot={false}
-                    // activeDot={{ r: 5 }}
                     />
-                    <Line
-                        type="linear"
-                        dataKey="sum"
-                        connectNulls
-                        xAxisId={"x"}
-                        yAxisId={"sum"}
-                        fillOpacity={1}
-                        dot={false}
-                    // activeDot={{ r: 5 }}
-                    />
-                    {/* <Line
-                        type="monotone"
-                        dataKey="mean"
-                        connectNulls
-                        xAxisId={"x"}
-                        yAxisId={"sum"}
-                        fillOpacity={1}
-                        dot={false}
-                        lineTension={0}
-                    // activeDot={{ r: 5 }}
-                    /> */}
-                    <ReferenceLine
-                        xAxisId={"x"}
-                        yAxisId={"sum"}
-                        stroke="orange"
-                        y={params.threshold} />
                 </LineChart>
             </ResponsiveContainer>
         </div>

@@ -2,7 +2,7 @@
   position: relative;
   cursor: pointer;
   width: 100%;
-  height: calc(100vh - 20px); /* calculate height of the screen minus the heading */
+  height: calc(100vh - 400px); /* calculate height of the screen minus the heading */
 }
 
 .map {
@@ -21,16 +21,36 @@
 
 .stats-panel {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
-  left: 10px;
+  bottom: 0px;
+  right: 0px;
+  left: 0px;
   background-color: white;
+  height: 400px;
+  overflow: scroll;
 } 
+
+.stats-panel.empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 .parameters {
   position: absolute;
-  left: 10px;
-  top: 10px;
+  left: 0px;
+  top: 0px;
+  width: 200px;
   background-color: white;
-  padding: 20px
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.data-selector {
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  height: 200px;
+  width: 200px;
 }

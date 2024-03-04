@@ -34,45 +34,20 @@ export function joinArraysByKey(arr1, arr2, key1, key2) {
     });
 }
 
-export function linearInterpolation(array, key) {
-    let return_obj = []
+export function countLongestConsecutiveWithCriteria(array, accessor, threshold, op) {
+    let maxCount = 0;
+    let currentCount = 0;
+
     for (let i = 0; i < array.length; i++) {
-        const currentObj = Object.assign(array[i]);
-        const prevObjWithKey = findPrevWithKey(array, key, i);
-        const nextObjWithKey = findNextWithKey(array, key, i);
-        console.log(nextObjWithKey)
-        console.log(prevObjWithKey)
-        
-        let val;
-        if (prevObjWithKey === null) val = array[nextObjWithKey][key]
-        else if (nextObjWithKey === null) val = array[prevObjWithKey][key]
-        else {
-            console.log(nextObjWithKey)
-            console.log(prevObjWithKey)
-            val = 100
-        }
-        currentObj[key] = val
-
-        return_obj.push(currentObj)
-    }
-    console.log(return_obj)
-    return return_obj
-}
-
-function findNextWithKey(array, key, startIndex) {
-    for (let i = startIndex + 1; i < array.length; i++) {
-        if (key in array[i]) {
-            return i
+        const val = accessor(array[i])
+        if (op === ">" ? val > threshold : val < threshold) {
+            currentCount = currentCount + 1;
+            if (currentCount > maxCount) {
+                maxCount = currentCount;
+            }
+        } else {
+            currentCount = 0;
         }
     }
-    return null; // If no next object with the key is found
-}
-
-function findPrevWithKey(array, key, startIndex) {
-    // for (let i = startIndex; i >= 0; i--) {
-    //     if (key in array[i]) {
-    //         return i
-    //     }
-    // }
-    return null; // If no next object with the key is found
+    return maxCount;
 }

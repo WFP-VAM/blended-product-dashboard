@@ -17,5 +17,12 @@ export const initMonths = {
 
 export const initYears = {
     start: 2000, 
-    end: 2020
+    end: 2002
+}
+
+export const initParams = {
+    "op": "sum",
+    "gtlt": "<",
+    "threshold": 30,
+    "wetdry_threshold": 30
 }

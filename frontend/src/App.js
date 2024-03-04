@@ -11,7 +11,7 @@ function App() {
   return (
     <AppProvider>
       <div className="App">
-        <Navbar />
+        {/* <Navbar /> */}
         <Map />
         <Chart />
         <Parameters />

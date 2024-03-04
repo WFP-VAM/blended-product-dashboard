@@ -1,6 +1,6 @@
 // AppContext.js
 import React, { createContext, useEffect, useState } from 'react';
-import { initYears, initMonths } from '../data/init';
+import { initYears, initMonths, initParams } from '../data/init';
 
 // Creating a context
 const AppContext = createContext();
@@ -8,16 +8,17 @@ const AppContext = createContext();
 // Creating a provider component
 const AppProvider = ({ children }) => {
     const [timeseriesFunctionParams, setTimeseriesFunctionParams] = useState({})
-    const [params, setParams] = useState({})
+    const [params, setParams] = useState(initParams)
     const [timeseriesData, setTimeseriesData] = useState([])
     const [years, setYears] = useState(initYears)
     const [months, setMonths] = useState(initMonths)
 
     function updateParams(d) {
+        console.log(d)
         setParams(Object.assign(...d))
     }
 
-    const params_to_watch = [timeseriesFunctionParams, months, years]
+    const params_to_watch = [params, timeseriesFunctionParams, months, years]
 
     useEffect(() => {
         updateParams(params_to_watch)

@@ -2,6 +2,7 @@ import { useEffect, useContext } from "react";
 import { AppContext } from '../../contexts/context';
 import { monthNames } from "../rangeslider/rangeslider";
 import { mean, min, max, sum, median } from "../../calc/metrics";
+import "./description.css"
 
 
 export default function Description({ data }) {
@@ -35,12 +36,12 @@ export default function Description({ data }) {
 
     return <div>
         <div>{monthNames[months.start]} - {monthNames[months.end]} </div>
-        <div>Daily stats: {Object.keys(daily_stats).map(
+        <div>Dekad stats: {Object.keys(daily_stats).map(
             x => {
                 return <div>{x}: {daily_stats[x]}</div>
             }
         )}</div>
-        {params.threshold && <div>
+        {params.threshold && <div className="description">
             Seasons with greater than {params.threshold}mm of rain: {seasonal_stats.filter(d => d.sum > params.threshold).length}{" "}
             out of {seasonal_stats.length}
         </div>}

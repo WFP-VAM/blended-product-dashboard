@@ -1,7 +1,24 @@
 import { useEffect, useState, useRef } from "react";
 
 
-export function useHover(map, mapLoaded, source) {
+function updatePaintProperties(map, style, layer, feature_state) {
+    Object.keys(style).map((k) => {
+        const v = style[k]
+        const current = map.getPaintProperty(layer, k)
+        map.setPaintProperty(
+            layer,
+            k,
+            [
+                'case',
+                ['boolean', ['feature-state', feature_state], false],
+                v,
+                current
+            ]
+        );
+    })
+}
+
+export function useHover(map, mapLoaded, source, layer, style) {
     const hoveringFeatureRef = useRef(null)
     const [hoveringFeature, setHoveringFeature] = useState(null)
 
@@ -28,6 +45,8 @@ export function useHover(map, mapLoaded, source) {
     useEffect(() => {
         if (!mapLoaded) return
         if (!map) return
+        if (!map.getLayer(layer)) return
+        updatePaintProperties(map, style, layer, 'hover')
         map.on('mousemove', source, (e) => {
             if (e.features.length === 0) return
             setHoveringFeature(e.features[0].id)
@@ -40,7 +59,7 @@ export function useHover(map, mapLoaded, source) {
     return { hoveringFeature, setHoveringFeature }
 }
 
-export function useSelect(map, mapLoaded, source, f) {
+export function useSelect(map, mapLoaded, source, layer, f, style) {
     const selectedFeatureRef = useRef(null)
     const [selectedFeature, setSelectedFeature] = useState(null)
 
@@ -69,6 +88,8 @@ export function useSelect(map, mapLoaded, source, f) {
     useEffect(() => {
         if (!mapLoaded) return
         if (!map) return
+        if (!map.getLayer(layer)) return
+        updatePaintProperties(map, style, layer, 'selected')
         map.on('click', source, (e) => {
             console.log(e.features[0])
             if (e.features.length === 0) return
