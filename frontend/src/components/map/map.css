@@ -2,7 +2,7 @@
   position: relative;
   cursor: pointer;
   width: 100%;
-  height: calc(100vh - 400px); /* calculate height of the screen minus the heading */
+  height: calc(100vh); /* calculate height of the screen minus the heading */
 }
 
 .map {
@@ -17,22 +17,6 @@
   left: 10px;
   bottom: 10px;
   z-index: 999;
-}
-
-.stats-panel {
-  position: absolute;
-  bottom: 0px;
-  right: 0px;
-  left: 0px;
-  background-color: white;
-  height: 400px;
-  overflow: scroll;
-} 
-
-.stats-panel.empty {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .parameters {
@@ -51,6 +35,4 @@
   position: absolute;
   right: 0px;
   top: 0px;
-  height: 200px;
-  width: 200px;
 }

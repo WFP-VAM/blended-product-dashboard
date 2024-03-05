@@ -1,0 +1,14 @@
+.stats-panel {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    left: 0px;
+    background-color: white;
+    overflow: scroll;
+  } 
+  
+  .stats-panel.empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }

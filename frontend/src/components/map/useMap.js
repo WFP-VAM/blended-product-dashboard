@@ -10,6 +10,7 @@ export function useMap({ initViewport, access_token }) {
   const [map, setMap] = useState(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [viewport, setViewport] = useState(initViewport);
+  const [click, setClick] = useState()
 
   function flyToViewport(viewport) {
     const viewport_formatted = {
@@ -69,7 +70,7 @@ export function useMap({ initViewport, access_token }) {
 
       setMapLoaded(true);
     });
-    map.on("click", () => console.log(map));
+    map.on("click", (e) => setClick(e));
   }, [map]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
@@ -80,5 +81,6 @@ export function useMap({ initViewport, access_token }) {
     setViewport,
     flyToViewport,
     flyToBounds,
+    click
   };
 }

@@ -1,3 +1,9 @@
 .description {
-    background-color: gray;
+    
+}
+
+.stats-header {
+    display: flex;
+    justify-content: space-around;
+
 }

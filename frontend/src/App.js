@@ -5,17 +5,20 @@ import './App.css';
 import Chart from './components/stats/statspanel.js';
 import Parameters from './components/parameters/parameters.js';
 import { AppProvider } from './contexts/context.js';
+import { SelectedFeatureProvider } from './contexts/selectedFeatureContext.js';
 
 function App() {
 
   return (
     <AppProvider>
+      <SelectedFeatureProvider >
       <div className="App">
         {/* <Navbar /> */}
         <Map />
         <Chart />
         <Parameters />
       </div>
+      </SelectedFeatureProvider>
     </AppProvider>
   );
 }

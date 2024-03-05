@@ -10,19 +10,27 @@ import {
     YAxis,
     Tooltip
 } from "recharts";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { AppContext } from '../../contexts/context';
 import Description from "./description";
 import { mean, min, max, sum, median, joinArraysByKey, countLongestConsecutiveWithCriteria } from "../../calc/metrics";
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import './statspanel.css'
+
+
 
 export default function Chart() {
     const {
         params, timeseriesData, months, years
     } = useContext(AppContext)
 
+    const [hoveringStats, setHoveringStats] = useState()
+
     if (timeseriesData.length === 0) return <div className="stats-panel empty">
-            Select a feature to view seasonal blended rainfall statistics
-        </div>
+        Select a feature to view seasonal blended rainfall statistics
+    </div>
     function formatTimeseriesData(data) {
         return data.data.map((x, idx) => {
             return {
@@ -73,8 +81,6 @@ export default function Chart() {
         return filteredData.filter(d => d.in_range === year)
     })
 
-    console.log(splitTS)
-    console.log(params)
     const seasonal_stats = splitTS.map(data => {
         return {
             mean: mean(data, 'v'),
@@ -86,7 +92,6 @@ export default function Chart() {
         }
     })
 
-    console.log(seasonal_stats)
     const data = joinArraysByKey(filteredData, seasonal_stats, 'k', 'label')
 
     const overall_stats = {
@@ -95,11 +100,11 @@ export default function Chart() {
         max: max(seasonal_stats, 'sum'),
         sum: sum(seasonal_stats, 'sum'),
     }
-    console.log(overall_stats)
     function getSeasonByYear(y) {
         return {
             stats: seasonal_stats.filter(d => parseInt(d.label.split('-')[0]) === y)[0],
-            daily: splitTS.filter(d => d[0].in_range === y)[0]
+            daily: splitTS.filter(d => d[0].in_range === y)[0],
+            year: y
         }
     }
 
@@ -115,25 +120,51 @@ export default function Chart() {
                     return season.max > params.threshold
                 case "streak":
                     return season.streak > params.threshold
-                    // switch (params.gtlt) {
-                    //     case ">":
-                    //         return season.streak > params.threshold
-                    //     case "<":
-                    //         return season.streak < params.threshold
-                    // }
                 default:
                     return 0
             }
         }
     )
-    console.log(years_gt_param)
-    // const seasonal_interpolated = linearInterpolation(data, 'mean')
-    // console.log(seasonal_interpolated)
+
+    const DailyTimeseries = <ResponsiveContainer width="100%" height={150}>
+        <LineChart
+            width={500}
+            height={110}
+            margin={{
+                top: 15,
+                right: 30,
+                left: 5,
+                bottom: 10,
+            }}
+            data={data}
+        >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="k" dy={5}
+                xAxisId={"x"}
+                ticks={data.map(d => d.label)}
+            />
+            <YAxis dataKey="v"
+                yAxisId={"sum"}
+            />
+            <Legend align="right" height={10} />
+            <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+            <Line
+                type="monotone"
+                dataKey="v"
+                xAxisId={"x"}
+                yAxisId={"sum"}
+                fillOpacity={1}
+                stroke="#C76F85"
+                dot={false}
+            />
+        </LineChart>
+    </ResponsiveContainer>
+
 
 
     return (
         <div className="stats-panel">
-            <Description data={filteredData} />
+            <Description data={filteredData} hoveringStats={hoveringStats} />
             <ResponsiveContainer width="100%" height={180}>
                 <LineChart
                     width={500}
@@ -149,7 +180,7 @@ export default function Chart() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="k" dy={5}
                         xAxisId={"x"}
-                        hide={true}
+                        // hide={true}
                         ticks={data.map(d => d.label)}
                     />
                     <YAxis dataKey={params.op}
@@ -164,11 +195,14 @@ export default function Chart() {
                             strokeOpacity={0.3}
                             onMouseEnter={(e) => {
                                 const season = getSeasonByYear(y)
-                                console.log(season)
+                                setHoveringStats({stats: season.stats, year: season.year})
+                            }}
+                            onMouseLeave={(e) => {
+                                setHoveringStats(null)
                             }}
                             yAxisId={"agg"}
                             xAxisId={"x"}
-                            fill={years_gt_param.includes(y) ? "cyan" : "gray"}
+                            fill={years_gt_param.includes(y) ? "orange" : "gray"}
                             opacity={0.5}
                         />)
                     }
@@ -188,39 +222,23 @@ export default function Chart() {
                         y={params.threshold} />
                 </LineChart>
             </ResponsiveContainer>
-            <ResponsiveContainer width="100%" height={150}>
-                <LineChart
-                    width={500}
-                    height={110}
-                    margin={{
-                        top: 15,
-                        right: 30,
-                        left: 5,
-                        bottom: 10,
-                    }}
-                    data={data}
+            <Accordion defaultExpanded>
+                <AccordionSummary
+                    aria-controls="panel1-content"
+                    id="panel1-header"
+                    sx={{
+                    '&:hover': {
+                        backgroundColor: 'rgba(184, 184, 184, 0.5)'
+                    },
+                }}
                 >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="k" dy={5}
-                        xAxisId={"x"}
-                        ticks={data.map(d => d.label)}
-                    />
-                    <YAxis dataKey="v"
-                        yAxisId={"sum"}
-                    />
-                    <Legend align="right" height={10} />
-                    <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                    <Line
-                        type="monotone"
-                        dataKey="v"
-                        xAxisId={"x"}
-                        yAxisId={"sum"}
-                        fillOpacity={1}
-                        stroke="#C76F85"
-                        dot={false}
-                    />
-                </LineChart>
-            </ResponsiveContainer>
+                    <p>Daily Timeseries</p>
+                </AccordionSummary>
+                <AccordionDetails>
+                    {DailyTimeseries}
+                </AccordionDetails>
+            </Accordion>
+
         </div>
     )
 }

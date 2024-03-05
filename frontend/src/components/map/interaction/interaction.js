@@ -63,7 +63,7 @@ export function useSelect(map, mapLoaded, source, layer, f, style) {
     const selectedFeatureRef = useRef(null)
     const [selectedFeature, setSelectedFeature] = useState(null)
 
-    function updateFeatureState(map, id) {
+    function updateFeatureState(map, feature) {
         if (selectedFeatureRef.current) {
             map.setFeatureState(
                 { source: source, id: selectedFeatureRef.current },
@@ -71,18 +71,17 @@ export function useSelect(map, mapLoaded, source, layer, f, style) {
             );
         }
         map.setFeatureState(
-            { source: source, id: id },
+            { source: source, id: feature.id },
             { selected: true }
         );
-        selectedFeatureRef.current = id
+        selectedFeatureRef.current = feature.id
     }
 
     useEffect(() => {
-        console.log(map, mapLoaded, selectedFeature)
         if (!mapLoaded) return
         if (!map) return
-        if (!selectedFeature) return
-        updateFeatureState(map, selectedFeature.id)
+        if (!selectedFeature) updateFeatureState(map, {id: null})
+        else updateFeatureState(map, selectedFeature)
     }, [map, mapLoaded, selectedFeature])
 
     useEffect(() => {
@@ -91,14 +90,12 @@ export function useSelect(map, mapLoaded, source, layer, f, style) {
         if (!map.getLayer(layer)) return
         updatePaintProperties(map, style, layer, 'selected')
         map.on('click', source, (e) => {
-            console.log(e.features[0])
             if (e.features.length === 0) return
             setSelectedFeature(e.features[0])
         });
     }, [map, mapLoaded])
 
     useEffect(() => {
-        console.log(selectedFeature)
         if (!mapLoaded) return
         if (!map) return
         if (!selectedFeature) return
@@ -106,4 +103,41 @@ export function useSelect(map, mapLoaded, source, layer, f, style) {
     }, [map, mapLoaded, selectedFeature])
 
     return { selectedFeature, setSelectedFeature }
+}
+
+
+export function usePaintPropertiesAcrossLayers(map, mapLoaded, layers, selectedFeature, property_name, style) {
+    const selectedFeatureRef = useRef(null)
+
+    function updateFeatureState(map, feature) {
+        const x = Object()
+        x[property_name] = false
+        if (selectedFeatureRef.current) {
+            map.setFeatureState(
+                { source: selectedFeatureRef.current.source, id: selectedFeatureRef.current.id },
+                x
+            );
+        }
+        x[property_name] = true
+        map.setFeatureState(
+            { source: feature.source, id: feature.id },
+            x
+        );
+        selectedFeatureRef.current = feature
+    }
+
+    useEffect(() => {
+        console.log(map, mapLoaded, selectedFeature)
+        if (!mapLoaded) return
+        if (!map) return
+        if (!selectedFeature) return
+        updateFeatureState(map, selectedFeature)
+    }, [map, mapLoaded, selectedFeature])
+
+    useEffect(() => {
+        if (!mapLoaded) return
+        if (!map) return
+        layers.map(l => updatePaintProperties(map, style, l, property_name))
+    }, [map, mapLoaded])
+
 }
