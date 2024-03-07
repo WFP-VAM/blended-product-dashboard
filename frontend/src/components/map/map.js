@@ -157,15 +157,15 @@ export default function Map() {
       [
       //   {
       //   id: JSON.stringify(selectedFeature1),
-      //   name: selectedFeature1.properties.adm1_name
+      //   name: `1-${selectedFeature1.properties.adm1_name}`
       // },
       {
         id: JSON.stringify(selectedFeature2),
-        name: selectedFeature2.properties.adm2_name
+        name: `2-${selectedFeature2.properties.adm2_name}`
       },
       {
         id: JSON.stringify(selectedFeature3),
-        name: selectedFeature3.properties.adm3_name
+        name: `3-${selectedFeature3.properties.adm3_name}`
       }]
     )
     const htmlString = ReactDOMServer.renderToString(select);
