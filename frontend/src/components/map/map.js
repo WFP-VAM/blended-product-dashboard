@@ -63,7 +63,7 @@ export default function Map() {
   function fetchStats(feature) {
     console.log(feature)
     // fetch(`https://api.earthobservation.vam.wfp.org/stats/admin/fetch?admin_id=${feature.properties.adm3_id}&level=3&coverage=full&vam=rfb&env=dev&tempres=daily`)
-    fetch(`https://hdc-api.earthobservation.vam.wfp.org/stats/admin?id_code=${feature.properties.adm3_id}&level=3&coverage=full&vam=rfb&tempres=daily`)
+    fetch(`https://dev.api.earthobservation.vam.wfp.org/stats/admin?id_code=${feature.properties.adm3_id}&level=3&coverage=full&vam=rfb&tempres=daily`)
       // fetch(`https://hdc-api.earthobservation.vam.wfp.org/stats/admin?id_code=${feature.properties.adm3_id}&level=3&coverage=full&vam=rfb`)
       .then(r => r.json())
       .then(r => {
@@ -222,7 +222,7 @@ export default function Map() {
     const level = field_mapping[selectedFeature.source]["level"]
 
     // fetch(`https://api.earthobservation.vam.wfp.org/stats/admin/fetch?admin_id=${feature.properties.adm3_id}&level=3&coverage=full&vam=rfb&env=dev&tempres=daily`)
-    fetch(`https://hdc-api.earthobservation.vam.wfp.org/stats/admin?id_code=${selectedFeature.properties[id_code]}&level=${level}&coverage=full&vam=rfb&tempres=daily`)
+    fetch(`https://dev.api.earthobservation.vam.wfp.org/stats/admin?id_code=${selectedFeature.properties[id_code]}&level=${level}&coverage=full&vam=rfb&tempres=daily`)
       // fetch(`https://hdc-api.earthobservation.vam.wfp.org/stats/admin?id_code=${feature.properties.adm3_id}&level=3&coverage=full&vam=rfb`)
       .then(r => r.json())
       .then(r => {
