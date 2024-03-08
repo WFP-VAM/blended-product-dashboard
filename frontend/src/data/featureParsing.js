@@ -3,7 +3,7 @@ export function getFeatureAdminLevel(feature) {
 
     if (Object.keys(feature.properties).includes("adm3_id")) admin_level = 3
     else if (Object.keys(feature.properties).includes("adm2_id")) admin_level = 2
-    else if (Object.keys(feature.properties).includes("adm2_id")) admin_level = 1
+    else if (Object.keys(feature.properties).includes("adm1_id")) admin_level = 1
 
     return admin_level
 }

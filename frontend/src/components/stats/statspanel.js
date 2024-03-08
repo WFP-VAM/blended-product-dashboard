@@ -8,16 +8,20 @@ import {
     ResponsiveContainer,
     XAxis,
     YAxis,
-    Tooltip
+    Tooltip,
+    BarChart,
+    Bar
 } from "recharts";
 import { useContext, useState } from "react";
 import { AppContext } from '../../contexts/context';
 import Description from "./description";
-import { mean, min, max, sum, median, joinArraysByKey, countLongestConsecutiveWithCriteria } from "../../calc/metrics";
+import { mean, min, max, sum, median, joinArraysByKey, countLongestConsecutiveWithCriteria, countWithCriteria } from "../../calc/metrics";
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import './statspanel.css'
+// import statement
+import * as d3 from "d3-array";
 
 
 
@@ -44,12 +48,6 @@ export default function Chart() {
         start: `${years.start}-01-01`,
         end: `${years.end + 1}-01-01`,
     }
-
-    // const formattedDates = {
-    //     start: `${months.start - months_buffer <= 0 ? years.start-1 : years.start}-${((months.start - months_buffer <=0 ? months.start - months_buffer + 12 : months.start - months_buffer)).toString().padStart(2, '0')}-01`,
-    //     end: `${months.end + months_buffer > 12 ? years.end+1 : years.end}-${((months.end + months_buffer)%12).toString().padStart(2, '0')}-01`,
-    // }
-    // console.log(formattedDates)
 
     const years_arr = Array(years.end + 1 - years.start).fill(0).map((_, i) => i + years.start)
 
@@ -88,17 +86,25 @@ export default function Chart() {
             max: max(data, 'v'),
             sum: sum(data, 'v'),
             label: median(data, 'k'),
-            streak: countLongestConsecutiveWithCriteria(data, d => d.v, params.wetdry_threshold, params.gtlt)
+            streak: countLongestConsecutiveWithCriteria(data, d => d.v, params.wetdry_threshold, params.gtlt),
+            count: countWithCriteria(data, d => d.v, params.wetdry_threshold, params.gtlt)
         }
     })
 
     const data = joinArraysByKey(filteredData, seasonal_stats, 'k', 'label')
 
     const overall_stats = {
-        mean: mean(seasonal_stats, 'sum'),
+        mean: mean(seasonal_stats, 'mean'),
         min: min(seasonal_stats, 'sum'),
-        max: max(seasonal_stats, 'sum'),
-        sum: sum(seasonal_stats, 'sum'),
+        max: max(seasonal_stats, 'max'),
+        min: max(seasonal_stats, 'min'),
+        meanConsecutive: max(seasonal_stats, 'streak'),
+        meanCount: max(seasonal_stats, 'count')
+    }
+
+    if (!['streak', 'count'].includes(params.op)) {
+        delete overall_stats['meanConsecutive']
+        delete overall_stats['meanCount']
     }
     function getSeasonByYear(y) {
         return {
@@ -119,6 +125,8 @@ export default function Chart() {
                 case "max":
                     return season.max > params.threshold
                 case "streak":
+                    return season.streak > params.threshold
+                case "count":
                     return season.streak > params.threshold
                 default:
                     return 0
@@ -160,77 +168,156 @@ export default function Chart() {
         </LineChart>
     </ResponsiveContainer>
 
+    // bin
+    const bin1 = d3.bin();
+    const bucketsOfTest = bin1(seasonal_stats.map(d => d[params.op])); // histogram data
+    const histData = bucketsOfTest.map(d => ({
+        k: (d.x0 + d.x1) / 2,
+        v: d.length
+    }))
+    const domain = [min(seasonal_stats, params.op), max(seasonal_stats, params.op)]
+    console.log(domain)
+
 
 
     return (
         <div className="stats-panel">
             <Description data={filteredData} hoveringStats={hoveringStats} />
-            <ResponsiveContainer width="100%" height={180}>
-                <LineChart
-                    width={500}
-                    height={110}
-                    margin={{
-                        top: 15,
-                        right: 30,
-                        left: 5,
-                        bottom: 10,
-                    }}
-                    data={data}
-                >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="k" dy={5}
-                        xAxisId={"x"}
-                        // hide={true}
-                        ticks={data.map(d => d.label)}
-                    />
-                    <YAxis dataKey={params.op}
-                        yAxisId={"agg"}
-                        domain={['auto', 'auto']}
-                    />
-                    <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                    {
-                        years_arr.map(y => <ReferenceArea
-                            x1={`${y}-${months.start.toString().padStart(2, '0')}-01`}
-                            x2={`${y}-${months.end.toString().padStart(2, '0')}-01`}
-                            strokeOpacity={0.3}
-                            onMouseEnter={(e) => {
-                                const season = getSeasonByYear(y)
-                                setHoveringStats({stats: season.stats, year: season.year})
-                            }}
-                            onMouseLeave={(e) => {
-                                setHoveringStats(null)
-                            }}
-                            yAxisId={"agg"}
-                            xAxisId={"x"}
-                            fill={years_gt_param.includes(y) ? "orange" : "gray"}
-                            opacity={0.5}
-                        />)
-                    }
-                    <Line
-                        type="linear"
-                        dataKey={params.op}
-                        connectNulls
-                        xAxisId={"x"}
-                        yAxisId={"agg"}
-                        fillOpacity={1}
-                        dot={false}
-                    />
-                    <ReferenceLine
-                        xAxisId={"x"}
-                        yAxisId={"agg"}
-                        stroke="orange"
-                        y={params.threshold} />
-                </LineChart>
-            </ResponsiveContainer>
-            <Accordion defaultExpanded>
+            <Accordion >
                 <AccordionSummary
                     aria-controls="panel1-content"
                     id="panel1-header"
                     sx={{
-                    '&:hover': {
-                        backgroundColor: 'rgba(184, 184, 184, 0.5)'
-                    },
-                }}
+                        '&:hover': {
+                            backgroundColor: 'rgba(184, 184, 184, 0.5)'
+                        },
+                    }}
+                >
+                    <p>Seasonal Breakdown</p>
+                </AccordionSummary>
+                <AccordionDetails>
+                    <div className="sidebyside-graph-container">
+                        <ResponsiveContainer width="80%" height={180}>
+                            Year-Over-Year
+                            <LineChart
+                                width={500}
+                                height={110}
+                                margin={{
+                                    top: 15,
+                                    right: 30,
+                                    left: 5,
+                                    bottom: 10,
+                                }}
+                                data={data}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="k" dy={5}
+                                    xAxisId={"x"}
+                                    // hide={true}
+                                    ticks={data.map(d => d.label)}
+                                />
+                                <YAxis dataKey={params.op}
+                                    yAxisId={"agg"}
+                                    domain={['auto', 'auto']}
+                                />
+                                <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                                {
+                                    years_arr.map(y => <ReferenceArea
+                                        x1={`${y}-${months.start.toString().padStart(2, '0')}-01`}
+                                        x2={`${y}-${months.end.toString().padStart(2, '0')}-01`}
+                                        strokeOpacity={0.3}
+                                        onMouseEnter={(e) => {
+                                            const season = getSeasonByYear(y)
+                                            setHoveringStats({ stats: season.stats, year: season.year })
+                                        }}
+                                        key={y}
+                                        onMouseLeave={(e) => {
+                                            setHoveringStats(null)
+                                        }}
+                                        yAxisId={"agg"}
+                                        xAxisId={"x"}
+                                        fill={years_gt_param.includes(y) ? "orange" : "gray"}
+                                        opacity={0.5}
+                                    />)
+                                }
+                                <Line
+                                    type="linear"
+                                    dataKey={params.op}
+                                    connectNulls
+                                    xAxisId={"x"}
+                                    yAxisId={"agg"}
+                                    fillOpacity={1}
+                                    dot={false}
+                                />
+                                <ReferenceLine
+                                    xAxisId={"x"}
+                                    yAxisId={"agg"}
+                                    stroke="orange"
+                                    y={params.threshold} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                        <ResponsiveContainer width="20%" height={180}>
+                            Seasonal
+                            <BarChart
+                                layout="vertical"
+                                width={500}
+                                height={110}
+                                margin={{
+                                    top: 15,
+                                    right: 30,
+                                    left: 5,
+                                    bottom: 10,
+                                }}
+                                // data={histData.sort((a,b) => a.v-b.v)}
+                                data={histData}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dy={5} dataKey={"v"} type="number" />
+                                <YAxis yAxisId={"y"} dataKey="k" domain={['auto', 'auto']} reversed />
+                                <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                                <Bar
+                                    dataKey={'v'}
+                                    yAxisId={"y"}
+                                    fillOpacity={1}
+                                    dot={false}
+                                    fill="#3182bd"
+                                />
+                                <ReferenceLine
+                                    stroke="orange"
+                                    yAxisId={"y"}
+                                    y={mean(seasonal_stats, params.op)} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </AccordionDetails>
+            </Accordion>
+            <Accordion >
+                <AccordionSummary
+                    aria-controls="panel1-content"
+                    id="panel1-header"
+                    sx={{
+                        '&:hover': {
+                            backgroundColor: 'rgba(184, 184, 184, 0.5)'
+                        },
+                    }}
+                >
+                    <p>Seasonal Stats</p>
+                </AccordionSummary>
+                <AccordionDetails>
+                    {Object.keys(overall_stats).map(k => <div>
+                        {k}: {overall_stats[k]}
+                    </div>)}
+                </AccordionDetails>
+            </Accordion>
+            <Accordion >
+                <AccordionSummary
+                    aria-controls="panel1-content"
+                    id="panel1-header"
+                    sx={{
+                        '&:hover': {
+                            backgroundColor: 'rgba(184, 184, 184, 0.5)'
+                        },
+                    }}
                 >
                     <p>Daily Timeseries</p>
                 </AccordionSummary>

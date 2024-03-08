@@ -5,10 +5,19 @@
     left: 0px;
     background-color: white;
     overflow: scroll;
+    display: flex;
+    flex-direction: column;
+    z-index: 3
   } 
   
   .stats-panel.empty {
     display: flex;
     justify-content: center;
     align-items: center;
+  }
+
+  .sidebyside-graph-container {
+    display: flex;
+    justify-content: space-between;
+    height: 200px;
   }

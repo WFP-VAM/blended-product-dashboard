@@ -51,3 +51,15 @@ export function countLongestConsecutiveWithCriteria(array, accessor, threshold, 
     }
     return maxCount;
 }
+
+export function countWithCriteria(array, accessor, threshold, op) {
+    let count = 0;
+
+    for (let i = 0; i < array.length; i++) {
+        const val = accessor(array[i])
+        if (op === ">" ? val > threshold : val < threshold) {
+            count+=1
+        }
+    }
+    return count;
+}

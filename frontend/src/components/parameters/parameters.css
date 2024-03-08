@@ -1,0 +1,16 @@
+.logos {
+    display: flex;
+    height: 100px; /* image's height */
+    align-items: center;
+}
+
+.logo {
+    width: 100px;
+    height: 100px
+}
+
+.flag {
+    height: 50px;
+    display: table-cell;
+    vertical-align: middle;
+}

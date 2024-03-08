@@ -43,16 +43,22 @@ export default function Description({ data, hoveringStats }) {
     const admin_level = getFeatureAdminLevel(selectedFeature)
     console.log(selectedFeature)
 
+    const seasonal_count = seasonal_stats.filter(d => d[params.op] > params.threshold)
+
     return <div className='stats-header'>
 
-        <div>Admin {admin_level}: {selectedFeature.properties[`adm${admin_level}_name`]} </div>
-        <div>{monthNames[months.start]} - {monthNames[months.end]} </div>
-        <div>Daily {params.op}: {daily_stats[params.op]}</div>
+        <h3>Admin {admin_level}: {selectedFeature.properties[`adm${admin_level}_name`]} </h3>
+        {/* <div>{monthNames[months.start]} - {monthNames[months.end]} </div>
+        <div>Seasonal Daily {params.op}: {daily_stats[params.op]}</div>
         {params.threshold && <div className="description">
-            Seasons meeting {params.threshold}mm of rain: {seasonal_stats.filter(d => d.sum > params.threshold).length}{" "}
-            out of {seasonal_stats.length}
-        </div>}
-        {hoveringStats && <div>{hoveringStats.year}: {hoveringStats.stats[params.op]}</div>}
+            {params.op === 'streak' ?
+                `Seasons with ${params.threshold} or more consecutive ${params.gtlt === ">" ? "wet" : "dry"} days (${params.gtlt}${params.wetdry_threshold}mm): ${seasonal_count.length} of ${seasonal_stats.length}` :
+                params.op === "count" ?
+                    `Seasons with ${params.threshold} or more ${params.gtlt === ">" ? "wet" : "dry"} days (${params.gtlt}${params.wetdry_threshold}mm): ${seasonal_count.length} of ${seasonal_stats.length}` :
+                    `Seasons meeting ${params.threshold}mm ${params.op} rainfall`
+            }
+        </div>} */}
+        {/* {hoveringStats && <div>{hoveringStats.year}: {hoveringStats.stats[params.op]}</div>} */}
 
     </div>
 }

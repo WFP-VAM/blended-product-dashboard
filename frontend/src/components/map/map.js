@@ -139,9 +139,9 @@ export default function Map() {
   }, [map, mapLoaded])
 
 
-  function HTML_Dropdown(id, options) {
+  function HTML_Dropdown(id, options, selectedId) {
     return <select id={id}>
-      {options.map(o => <option value={o.id}>{o.name}</option>)}
+      {options.map(o => <option value={o.id} selected={o.id === selectedId}>{o.name}</option>)}
     </select>
   }
 
@@ -155,10 +155,10 @@ export default function Map() {
     const select = HTML_Dropdown(
       id,
       [
-      //   {
-      //   id: JSON.stringify(selectedFeature1),
-      //   name: `1-${selectedFeature1.properties.adm1_name}`
-      // },
+        {
+        id: JSON.stringify(selectedFeature1),
+        name: `1-${selectedFeature1.properties.adm1_name}`
+      },
       {
         id: JSON.stringify(selectedFeature2),
         name: `2-${selectedFeature2.properties.adm2_name}`
@@ -166,7 +166,8 @@ export default function Map() {
       {
         id: JSON.stringify(selectedFeature3),
         name: `3-${selectedFeature3.properties.adm3_name}`
-      }]
+      }],
+      JSON.stringify(selectedFeature3) //This should match the default set with `setSelectedFeature` (line 191) when the dropdown is created 
     )
     const htmlString = ReactDOMServer.renderToString(select);
     try {
@@ -187,6 +188,7 @@ export default function Map() {
       setSelectedFeature(JSON.parse(e.target.value))
     };
     previousPopup.current = id
+    setSelectedFeature(selectedFeature3)
 
   }, [map, click, selectedFeature1, selectedFeature2, selectedFeature3])
 
@@ -214,12 +216,13 @@ export default function Map() {
       },
       "mozambique1": {
         "level": 1,
-        "id_field": "dataviz_adm1_id",
+        "id_field": "adm1_id",
       }
     }
 
     const id_code = field_mapping[selectedFeature.source]["id_field"]
     const level = field_mapping[selectedFeature.source]["level"]
+
 
     // fetch(`https://api.earthobservation.vam.wfp.org/stats/admin/fetch?admin_id=${feature.properties.adm3_id}&level=3&coverage=full&vam=rfb&env=dev&tempres=daily`)
     fetch(`https://dev.api.earthobservation.vam.wfp.org/stats/admin?id_code=${selectedFeature.properties[id_code]}&level=${level}&coverage=full&vam=rfb&tempres=daily`)
